@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   resume: { type: String, default: "" },
-  image: { type: String, default: "https://default-avatar.png" } // fallback image
+  image: { type: String, required: true}// fallback image
 });
 
 const User = mongoose.model("User", userSchema);
