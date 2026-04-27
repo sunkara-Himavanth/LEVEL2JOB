@@ -58,7 +58,8 @@ app.use("/api/protected", clerkMiddleware(), (req, res) => {
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Catch all handler: send back React's index.html file for any non-API routes
-app.get('*', (req, res) => {
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
