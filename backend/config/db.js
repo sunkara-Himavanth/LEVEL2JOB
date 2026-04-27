@@ -4,8 +4,6 @@ const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       dbName: "job-portal",
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     });
     console.log("✅ Database connected");
   } catch (err) {

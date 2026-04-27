@@ -3,9 +3,14 @@ import Navbar from '../components/Navbar'
 import { assets, jobsApplied } from '../assets/assets';
 import moment from 'moment/moment';
 import Footer from '../components/Footer';
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 const Applications = () => {
   const [isEdit, setIsEdit] = React.useState(false);
   const [resume, setResume] = React.useState(null);
+  const {backendUrl,userData,userApplications,fetchUserData}=useContext(AppContext);
+  
+  
   return (
     <>
      <Navbar  />

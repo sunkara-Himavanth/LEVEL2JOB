@@ -1,18 +1,15 @@
 import { createContext, useState, useEffect } from "react";
-
-import { toast } from "react-toastify";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
+
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const {user}=useUser()
-const {getToken}=useAuth()
-  const [searchFilter, setSearchFilter] = useState({
-    title: "",
-    location: "",
-  });
+  const { user } = useUser();
+  const { getToken } = useAuth();
+
+  const [searchFilter, setSearchFilter] = useState({ title: "", location: "" });
   const [isSearched, setIsSearched] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [showRecruiterLogin, setShowRecruiterLogin] = useState(false);
@@ -20,81 +17,88 @@ const {getToken}=useAuth()
   const [companyData, setCompanyData] = useState(null);
   const [userData, setUserData] = useState(null);
   const [userApplications, setUserApplications] = useState([]);
-  // FUNCTION TO FETCH JOBS (mock data for now)
+
+  // -------------------------
+  // Fetch all jobs
+  // -------------------------
   const fetchJobs = async () => {
     try {
-        const {data}=await axios.get(backendUrl+'/api/jobs')
-        if(data.success){
-            setJobs(data.jobs)
-            console.log(data.jobs)
-        }else{
-            toast.error(data.message)
-        }
-    } catch (error) {
-        toast.error(error.message)
-    }
-    
-  };
-
-  // FUNCTION TO FETCH COMPANY DATA
-  const fetchCompanyData = async () => {
-    try {
-        const token=await getToken()
-      const {data} = await axios.get(backendUrl + "/api/users/user", {
-        headers: { Authorization:`Bearer ${token}` },
-      });
+      const { data } = await axios.get(`${backendUrl}/api/jobs`);
       if (data.success) {
-        setUserData(data.user);
-        
-      } else {
-        toast.error(data.message);
+        setJobs(data.jobs);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Error fetching jobs:", error.message);
     }
   };
 
-  // On first load → fetch jobs & check localStorage for token
+  // -------------------------
+  // Fetch company data
+  // -------------------------
+  const fetchCompanyData = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(`${backendUrl}/api/users/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        setCompanyData(data.user);
+      }
+    } catch (error) {
+      console.error("Error fetching company data:", error.message);
+    }
+  };
+
+  // -------------------------
+  // Fetch user data
+  // -------------------------
+  const fetchUserData = async () => {
+    try {
+      const userToken = localStorage.getItem("userToken"); // or getToken()
+      if (!userToken) return;
+
+      const res = await fetch(`${backendUrl}/api/user/user`, {
+        headers: { token: userToken },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserData(data.user);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error.message);
+    }
+  };
+
+  // -------------------------
+  // On mount → fetch jobs & check localStorage for company token
+  // -------------------------
   useEffect(() => {
     fetchJobs();
     const storedCompanyToken = localStorage.getItem("companyToken");
-    if (storedCompanyToken) {
-      setCompanyToken(storedCompanyToken);
-    }
+    if (storedCompanyToken) setCompanyToken(storedCompanyToken);
   }, []);
 
-//function to fetch user data
-const fetchUserData=async()=>{
-  try {
-    const res=await fetch(backendUrl+'/api/user/user',{
-      headers:{token:userToken}
-    })
-    const data=await res.json();
-    if(data.success){
-      setUserData(data.user)
-      console.log(data)
-    }   else{
-      toast.error(data.message)
-    }   
-} catch (error) {
-    toast.error(error.message)
-}
-}
-
-  // If token changes → fetch company data
+  // -------------------------
+  // Fetch company data if token exists
+  // -------------------------
   useEffect(() => {
-    if (companyToken) {
-      fetchCompanyData();
-    }
+    if (companyToken) fetchCompanyData();
   }, [companyToken]);
 
+  // -------------------------
+  // Fetch user data when user changes
+  // -------------------------
   useEffect(() => {
-    if(user){
-        fetchUserData()
-    }   else    
-    setUserData(null)
-}, [user]);
+    if (user) {
+      fetchUserData();
+    } else {
+      setUserData(null);
+    }
+  }, [user]);
 
+  // -------------------------
+  // Context value
+  // -------------------------
   const value = {
     setIsSearched,
     searchFilter,
@@ -108,12 +112,13 @@ const fetchUserData=async()=>{
     setCompanyToken,
     companyData,
     setCompanyData,
-    backendUrl,userData,setUserData,userApplications,setUserApplications,
+    backendUrl,
+    userData,
+    setUserData,
+    userApplications,
+    setUserApplications,
+    fetchUserData,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {props.children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
 };

@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import Loading from "../components/Loading";
 import Navbar from "../components/Navbar";
@@ -9,56 +9,28 @@ import { assets } from "../assets/assets";
 import kConvert from "k-convert";
 import moment from "moment";
 import axios from "axios";
-import { toast } from "react-toastify";
 
 const ApplyJob = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [jobData, setJobData] = useState(null);
-  const { jobs, backendUrl, userData, userApplications } = useContext(AppContext);
+  const { jobs, backendUrl } = useContext(AppContext);
 
-  // ✅ Fetch job
+  // ✅ Fetch job details
   const fetchJob = async () => {
     try {
       const { data } = await axios.get(`${backendUrl}/api/jobs/${id}`);
       if (data.success) {
         setJobData(data.job);
-      } else {
-        toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Error fetching job:", error.message);
     }
   };
 
-  // ✅ Apply job
-  const applyHandler = async () => {
-    try {
-      if (!userData) return toast.error("Please login to apply");
-      if (!userData.resume) return toast.error("Please upload resume in profile to apply");
-      if (!userData.token) return toast.error("Session expired. Please login again");
-
-      if (userApplications?.some((app) => app.jobId === id)) {
-        return toast.info("You have already applied to this job");
-      }
-
-      const { data } = await axios.post(
-        `${backendUrl}/api/jobs/apply-job`,
-        { jobId: id },
-        {
-          headers: {
-            Authorization: `Bearer ${userData.token}`, // ✅ fixed
-          },
-        }
-      );
-
-      if (data.success) {
-        toast.success("Application submitted successfully!");
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
-    }
+  // ✅ Apply job handler: navigate to applications page
+  const applyHandler = () => {
+    navigate("/applications");
   };
 
   useEffect(() => {
@@ -105,7 +77,10 @@ const ApplyJob = () => {
             </div>
 
             <div className="flex flex-col justify-center text-end text-sm max-md:mx-auto max-md:text-center gap-4">
-              <button onClick={applyHandler} className="bg-blue-600 text-white px-6 py-3 rounded">
+              <button
+                onClick={applyHandler}
+                className="bg-blue-600 text-white px-6 py-3 rounded"
+              >
                 Apply Now
               </button>
               <p className="text-sm text-gray-500 mt-2">
@@ -139,7 +114,8 @@ const ApplyJob = () => {
               {jobs
                 .filter(
                   (job) =>
-                    (job.companyId?._id || job.companyId) === (jobData.companyId?._id || jobData.companyId) &&
+                    (job.companyId?._id || job.companyId) ===
+                      (jobData.companyId?._id || jobData.companyId) &&
                     job._id !== jobData._id
                 )
                 .slice(0, 3)
