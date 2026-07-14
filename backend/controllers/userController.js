@@ -1,5 +1,5 @@
 import cloudinary from "../config/cloudinary.js";
-import JobApplication from "../models/JobApplication.js";
+import JobApplication from "../models/jobApplication.js"; // Fixed case-sensitivity here
 import User from "../models/User.js";
 import Job from "../models/Job.js";
 
