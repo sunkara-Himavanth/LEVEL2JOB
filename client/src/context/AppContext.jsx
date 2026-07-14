@@ -5,7 +5,13 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  let backendUrl = import.meta.env.VITE_BACKEND_URL;
+  
+  // Automatically sanitize backendUrl if it lacks http:// or https://
+  if (backendUrl && !backendUrl.startsWith("http://") && !backendUrl.startsWith("https://")) {
+    backendUrl = `https://${backendUrl}`;
+  }
+
   const { user } = useUser();
   const { getToken } = useAuth();
 
@@ -57,7 +63,8 @@ export const AppContextProvider = (props) => {
       const userToken = localStorage.getItem("userToken"); // or getToken()
       if (!userToken) return;
 
-      const res = await fetch(`${backendUrl}/api/user/user`, {
+      // Note: Ensure your backend router uses matching pluralization (/api/users vs /api/user)
+      const res = await fetch(`${backendUrl}/api/users/user`, {
         headers: { token: userToken },
       });
       const data = await res.json();
