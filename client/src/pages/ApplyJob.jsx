@@ -34,7 +34,10 @@ const ApplyJob = () => {
   };
 
   useEffect(() => {
-    fetchJob();
+    // ✅ Check if id is present and is not the string literal "undefined"
+    if (id && id !== "undefined") {
+      fetchJob();
+    }
   }, [id]);
 
   if (!jobData) return <Loading />;
