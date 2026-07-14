@@ -17,9 +17,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
-// Connect to database & Cloudinary
-await connectDB();
-await connectCloudinary();
+// Middleware to ensure DB and Cloudinary connections are ready without blocking global initialization
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    await connectCloudinary();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -53,7 +60,6 @@ app.use("/api/protected", clerkMiddleware(), (req, res) => {
 // Serve static files from the React app build directory
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Catch all handler: send back React's index.html file for any non-API routes
 // Catch all handler: send back React's index.html file for any non-API routes
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
